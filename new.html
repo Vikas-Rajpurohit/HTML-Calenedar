@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <style>
+      /* CSS Styling for the Calendar */
+      table {
+        border-collapse: collapse;
+      }
+
+      th,
+      td {
+        border: 1px solid black;
+        padding: 8px;
+        text-align: center;
+      }
+
+      th {
+        background-color: #f2f2f2;
+      }
+    </style>
+  </head>
+  <body>
+    <table>
+      <tr>
+        <th>Sunday</th>
+        <th>Monday</th>
+        <th>Tuesday</th>
+        <th>Wednesday</th>
+        <th>Thursday</th>
+        <th>Friday</th>
+        <th>Saturday</th>
+      </tr>
+      <tbody id="calendar-body"></tbody>
+    </table>
+
+    <script>
+      var calendarBody = document.getElementById("calendar-body");
+      var currentDate = new Date();
+      var daysInMonth = new Date(
+        currentDate.getFullYear(),
+        currentDate.getMonth() + 1,
+        0
+      ).getDate();
+      var firstDayOfMonth = new Date(
+        currentDate.getFullYear(),
+        currentDate.getMonth(),
+        1
+      ).getDay();
+
+      var events = [
+        {
+          id: "1",
+          name: "test1",
+          start: 5,
+        },
+        {
+          id: "2",
+          name: "test2",
+          start: 5,
+        },
+        {
+          id: "3",
+          name: "test3",
+          start: 6,
+        },
+        {
+          id: "4",
+          name: "test4",
+          start: 7,
+        },
+        {
+          id: "5",
+          name: "test5",
+          start: 7,
+        },
+        {
+          id: "6",
+          name: "test6",
+          start: 15,
+        },
+      ];
+
+      var calendarRows = [];
+
+      // Create a row for the first week
+      calendarRows.push("<tr>");
+
+      // Add empty cells for the days before the first day of the month
+      for (var i = 0; i < firstDayOfMonth; i++) {
+        calendarRows.push("<td></td>");
+      }
+
+      // Add the dates for the current month
+      var e = new Array(new Array());
+      for (var day = 1; day <= daysInMonth; day++) {
+        var overlappingEvents = events.filter(function (event) {
+          return event.start == day;
+        });
+
+        if (overlappingEvents.length > 0) {
+          e.push(overlappingEvents);
+        }
+
+        calendarRows.push("<td>" + day + "</td>");
+
+        // If the current day is a Saturday, start a new row
+        if (
+          new Date(
+            currentDate.getFullYear(),
+            currentDate.getMonth(),
+            day
+          ).getDay() === 6
+        ) {
+          calendarRows.push("</tr>");
+
+          // Has to be dynamic
+
+          var max = 3;
+
+          console.log(e['length'])
+
+          if (e["length"] > 0) {
+            for (var i = 0; i < max; i++) {
+              // K should be always positive use abs
+              calendarRows.push("<tr>");
+              for (var k = day - 6; k <= day; k++) {
+                var flg = false;
+                for (var j = 0; j < e.length; j++) {
+                  if (e[j][i] !== undefined && e[j][i].start == k) {
+                    calendarRows.push("<td>" + e[j][i].name + "</td>");
+                    flg = true;
+                  }
+                }
+                if (!flg) {
+                  calendarRows.push("<td></td>");
+                  flg = false;
+                }
+              }
+              calendarRows.push("</tr>");
+            }
+          }
+
+          e = [];
+          calendarRows.push("<tr>");
+        }
+      }
+
+      // Close any remaining row
+      calendarRows.push("</tr>");
+
+      // Set the calendar body content
+      calendarBody.innerHTML = calendarRows.join("");
+    </script>
+  </body>
+</html>

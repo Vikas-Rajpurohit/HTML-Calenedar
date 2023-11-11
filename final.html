@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <style>
+      /* CSS Styling for the Calendar */
+      table {
+        border-collapse: collapse;
+      }
+
+      th,
+      td {
+        border: 1px solid black;
+        padding: 8px;
+        text-align: center;
+      }
+
+      th {
+        background-color: #f2f2f2;
+      }
+    </style>
+  </head>
+  <body>
+    <table>
+      <tr>
+        <th>Sunday</th>
+        <th>Monday</th>
+        <th>Tuesday</th>
+        <th>Wednesday</th>
+        <th>Thursday</th>
+        <th>Friday</th>
+        <th>Saturday</th>
+      </tr>
+      <tbody id="prev"></tbody>
+      <tbody id="calendar-body"></tbody>
+      <tbody id="next"></tbody>
+    </table>
+
+    <script>
+      var calendarBody = document.getElementById("calendar-body");
+      var prev = document.getElementById("prev");
+      var next = document.getElementById("next");
+
+      var currentDate = new Date();
+      var currentMonth = currentDate.getMonth();
+      var currentYear = currentDate.getFullYear();
+      var daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+      var firstDayOfMonth = new Date(currentYear, currentMonth, 1).getDay();
+
+      var prevMonth = currentMonth === 0 ? 11 : currentMonth - 1;
+      var prevYear = currentMonth === 0 ? currentYear - 1 : currentYear;
+      var prevDaysInMonth = new Date(prevYear, prevMonth + 1, 0).getDate();
+
+      var nextMonth = currentMonth === 11 ? 0 : currentMonth + 1;
+      var nextYear = currentMonth === 11 ? currentYear + 1 : currentYear;
+
+      var events = [
+        {
+          id: "1",
+          name: "test1",
+          start: 1,
+          month: 6,
+          end: 3,
+        },
+        {
+          id: "2",
+          name: "test2",
+          start: 2,
+          month: 6,
+          end: 3,
+        },
+        {
+          id: "3",
+          name: "test3",
+          start: 29,
+          month: 6,
+          end: 6,
+        },
+        {
+          id: "4",
+          name: "test4",
+          start: 24,
+          month: 5,
+          end: 3,
+        },
+        // Add more objects as needed
+      ];
+
+      var e = [];
+      var calendarRows = [];
+
+      // FIRST LOOP START
+      var fl = [];
+      calendarRows.push("<tr>");
+      for (var i = firstDayOfMonth - 1; i >= 0; i--) {
+        var d = prevDaysInMonth - i;
+        var m = currentMonth - 1;
+
+        var overlappingEvents = events.filter(function (event) {
+          if (
+            event.start < prevDaysInMonth-firstDayOfMonth+1 &&
+            event.month == m &&
+            event.start + event.end >= prevDaysInMonth - firstDayOfMonth + 1 
+          ) {
+            events.push({
+              id: event.id,
+              name: event.name,
+              // New change in formulas
+              start: prevDaysInMonth - firstDayOfMonth + 1,
+              month: event.month,
+              end: event.end  - (prevDaysInMonth - firstDayOfMonth+1 - event.start),
+            });
+          }
+
+          console.log(events);
+
+          return event.start == d && event.month == m;
+        });
+
+        if (overlappingEvents.length > 0) {
+          e.push(overlappingEvents);
+        }
+        fl.push({ day: d, month: m });
+
+        calendarRows.push("<td>" + d + "</td>");
+      }
+      calendarRows.push("</tr>");
+
+      for (i = 0; i < e.length; i++) {
+        for (j = 0; j < e[i].length; j++) {
+          var counter = 0;
+          calendarRows.push("<tr>");
+
+          var counter = 0;
+          for (k = 0; k < fl.length; k++) {
+            if (counter == firstDayOfMonth) {
+              break;
+            }
+
+            if (e[i][j].start == fl[k].day) {
+              calendarRows.push(
+                "<td colspan='" + e[i][j].end + "'>" + e[i][j].name + "</td>"
+              );
+              counter += e[i][j].end;
+            } else {
+              calendarRows.push("<td></td>");
+              counter += 1;
+            }
+          }
+
+          calendarRows.push("</tr>");
+        }
+      }
+
+      e = [];
+      prev.innerHTML = calendarRows.join("");
+      calendarRows = [];
+      // FIRST LOOP END
+
+      // MID LOOP START
+      calendarRows.push("<tr>");
+      for (s = 0; s < firstDayOfMonth; s++) {
+        calendarRows.push("<td></td>");
+      }
+
+      var daysInWeek = 0;
+      for (var day = 1; day <= daysInMonth; day++) {
+        var overlappingEvents = events.filter(function (event) {
+          return event.start == day && event.month == currentMonth;
+        });
+
+        if (overlappingEvents.length > 0) {
+          e.push(overlappingEvents);
+        }
+
+        daysInWeek += 1;
+
+        calendarRows.push("<td>" + day + "</td>");
+
+        // If the current day is a Saturday, start a new row
+        if (
+          new Date(currentYear, currentMonth, day).getDay() === 6 ||
+          day === daysInMonth
+        ) {
+          calendarRows.push("</tr>");
+
+          for (var i = 0; i < e.length; i++) {
+            calendarRows.push("<tr>");
+
+            for (var j = 0; j < e[i].length; j++) {
+              // New change added -1
+              var maxm = e[i][j].start + e[i][j].end - 1;
+
+              console.log(maxm, day, daysInMonth);
+              if (maxm > day && day != daysInMonth) {
+                events.push({
+                  id: e[i][j].id,
+                  name: e[i][j].name,
+                  // New change in formulas
+                  start: day + 1,
+                  month: e[i][j].month,
+                  end: maxm - day,
+                });
+
+                e[i][j].end = e[i][j].end - (maxm - day);
+              }
+
+              if (maxm > daysInMonth && day == daysInMonth) {
+                events.push({
+                  id: e[i][j].id,
+                  name: e[i][j].name,
+                  // New change in formulas
+                  start: 1,
+                  month: e[i][j].month + 1,
+                  end: maxm - day,
+                });
+
+                e[i][j].end = e[i][j].end - (maxm - day);
+              }
+
+              calendarRows.push("<tr>");
+
+              var counter = 0;
+              for (var k = day - daysInWeek + 1; k <= day; k++) {
+                if (daysInWeek < 7 && day != daysInMonth) {
+                  for (r = 0; r < 7 - daysInWeek; r++) {
+                    calendarRows.push("<td></td>");
+                  }
+                }
+
+                if (counter == daysInWeek) {
+                  break;
+                }
+
+                if (e[i][j].start === k) {
+                  calendarRows.push(
+                    "<td colspan='" +
+                      e[i][j].end +
+                      "'>" +
+                      e[i][j].name +
+                      "</td>"
+                  );
+                  counter += e[i][j].end;
+                } else {
+                  calendarRows.push("<td></td>");
+                  counter += 1;
+                }
+              }
+              calendarRows.push("</tr>");
+            }
+
+            calendarRows.push("</tr>");
+          }
+
+          e = [];
+          calendarRows.push("<tr>");
+          daysInWeek = 0;
+        }
+      }
+  
+      calendarBody.innerHTML = calendarRows.join("");
+      calendarRows = [];
+      // MID LOOP END
+
+      // LAST LOOP
+      e = [];
+      var lastDayOfWeek = new Date(
+        currentYear,
+        currentMonth,
+        daysInMonth
+      ).getDay();
+      var remainingDays = 6 - lastDayOfWeek;
+
+      calendarRows.push("<tr>");
+      for (var i = remainingDays - 6; i <= remainingDays; i++) {
+        var overlappingEvents = events.filter(function (event) {
+          var m = currentMonth + 1;
+
+          return event.start == i && event.month == m;
+        });
+
+        if (overlappingEvents.length > 0) {
+          e.push(overlappingEvents);
+        }
+
+        if (i > 0) {
+          calendarRows.push("<td class='next-month'>" + i + "</td>");
+        } else {
+          calendarRows.push("<td></td>");
+        }
+      }
+      calendarRows.push("</tr>");
+
+      for (i = 0; i < e.length; i++) {
+        for (j = 0; j < e[i].length; j++) {
+          var counter = 0;
+          calendarRows.push("<tr><td></td><td></td>");
+
+          var counter = 0;
+          for (k = 1; k <= remainingDays; k++) {
+            if (counter == 5) {
+              break;
+            }
+
+            if (e[i][j].start == k) {
+              calendarRows.push(
+                "<td colspan='" + e[i][j].end + "'>" + e[i][j].name + "</td>"
+              );
+              counter += e[i][j].end;
+            } else {
+              calendarRows.push("<td></td>");
+              counter += 1;
+            }
+          }
+
+          calendarRows.push("</tr>");
+        }
+      }
+
+      next.innerHTML = calendarRows.join("");
+    </script>
+  </body>
+</html>
